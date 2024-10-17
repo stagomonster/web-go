@@ -1,8 +1,9 @@
 const board = [];
-let visited = [];
 
 const ROW_SQUARES = 19;
 const COL_SQUARES = 19;
+
+let visited = new Array(ROW_SQUARES).fill(0).map(() => new Array(COL_SQUARES).fill(0));
 
 const E = 0;
 const B = 1;
@@ -13,7 +14,7 @@ let blackCaptures = 0;
 
 let currentPlayer = B; // 1 or 2 B or W
 
-const zobristHash = [];
+let zobristHash = [];
 let lastHash = 0;
 const hashes = [];
 
@@ -34,6 +35,8 @@ function initializeBoard() {
 
 function placeStone(s) {
     board[s.x][s.y] = s.color;
+    let square = document.getElementById(`square-${s.x}-${s.y}`);
+    square.className = `square ${s.color === B? 'black' : 'white'}`;
 }
 
 function isPlaceable(x,y) {
@@ -56,6 +59,21 @@ const renderBoard = () => {
         squareElement.dataset.x = i; // Add data-x attribute
         squareElement.dataset.y = j; // Add data-y attribute
 
+
+        squareElement.style.gridColumnStart = j + 1;
+        squareElement.style.gridColumnEnd = j + 2;
+        squareElement.style.gridRowStart = i + 1;
+        squareElement.style.gridRowEnd = i + 2;
+        squareElement.id = `square-${i}-${j}`;
+
+        if (board[i][j] == B) {
+            squareElement.innerHTML = '<img src = "black_stone.png" alt = "Black Stone"/>';
+
+        } else if (board[i][j] == W) {
+            squareElement.innerHTML = '<img src="white_stone.png" alt="White Stone"/>';
+        } else {
+            squareElement.innerHTML = '';
+        }
         squareElement.addEventListener('click', click);
 
         // Add the square element to the board element
@@ -72,18 +90,18 @@ const click = (event) => {
 
     if (isPlaceable(x,y)) {
         let h = 0; //current hash
-        const Stone = new Stone(currentPlayer, x, y)
+        let stone = new Stone(currentPlayer, x, y)
         placeStone(stone);
         square.className = `square ${currentPlayer == 1? 'black' : 'white'}`;
         currentPlayer = (currentPlayer == B)? W : B;
 
         let numCaptures = 0;
-        let captures = check_captures(currentPlayer);
-        for (int r = 0; r < ROW_SQUARES; r++) {
-            for (int c = 0; c < COL_SQUARES; c++) {
-                if (captures[r][c] == 1) {
+        let captures = checkCaptures(currentPlayer);
+        for (let r = 0; r < ROW_SQUARES; r++) {
+            for (let c = 0; c < COL_SQUARES; c++) {
+                if (captures[r][c] == 1){
                     board[r][c] = E;
-                    captures += 1;
+                    numCaptures += 1;
                 }
             }
         }
@@ -94,13 +112,13 @@ const click = (event) => {
             h = removeHash(currentPlayer, captures, h);
         }
 
-        possibleCaptures = check_captures(3-currentPlayer);
+        possibleCaptures = checkCaptures(3-currentPlayer);
         if(checkHash(h) || possibleCaptures.some(sublist => sublist.includes(1)) ) {
             //KO
-            for (int r = 0; r < ROW_SQUARES; r++) {
-                for (int c = 0; c < COL_SQUARES; c++) {
+            for (let r = 0; r < ROW_SQUARES; r++) {
+                for (let c = 0; c < COL_SQUARES; c++) {
                     if (captures[r][c] == 1) {
-                        board[r][c] == currentPlayer;
+                        board[r][c] = currentPlayer;
                     }
                 }
             }
@@ -140,19 +158,19 @@ function floodFill(x,y, color) { // return true if alive, false if captured
         return false;
     }
 
-    live = x > 0 and floodFill(x - 1, y, color);
-    live|= x < ROW_SQUARES - 1 and floodFill(x + 1, y, color);
-    live|= y > 0 and floodFill(x, y - 1, color);
-    live|= y < COL_SQUARES - 1 and floodFill(x, y + 1, color);
+    live = x > 0 && floodFill(x - 1, y, color);
+    live = live || (x < ROW_SQUARES - 1 && floodFill(x + 1, y, color));
+    live = live || (y > 0 && floodFill(x, y - 1, color));
+    live = live || (y < COL_SQUARES - 1 && floodFill(x, y + 1, color));
     return live;
 }
 
 function checkCaptures(color) {
-    let removed = [];
-    for (int r = 0; r < ROW_SQUARES; r++) {
-        for (int c = 0; c < COL_SQUARES; c++) {
+    let removed = new Array(ROW_SQUARES).fill(0).map(() => new Array(COL_SQUARES).fill(0));
+    for (let r = 0; r < ROW_SQUARES; r++) {
+        for (let c = 0; c < COL_SQUARES; c++) {
             if (board[r][c] == color) {
-                visited = [];
+                visited = new Array(ROW_SQUARES).fill(0).map(() => new Array(COL_SQUARES).fill(0));
                 if (!floodFill(color)) { //Group is not alive
                     removed[r][c] = 1;
                 }
@@ -173,6 +191,10 @@ function initializeZobristTable() {
     return board;
 }
 
+function checkHash(h) {
+    return h in hashes;
+}
+
 function addHashOne(ap, addPos, hash_){
     let addPiece = ap - 1; // to fit into (1, 2^64 -1) threshold
 
@@ -183,8 +205,8 @@ function addHashOne(ap, addPos, hash_){
 function removeHash(rp, removePos, hash_) {
     let removePiece = rp - 1;
     let h = hash_;
-    for (int r = 0; r < ROW_SQUARES; r++) {
-        for (int c = 0; c < COL_SQUARES; c++) {
+    for (let r = 0; r < ROW_SQUARES; r++) {
+        for (let c = 0; c < COL_SQUARES; c++) {
             if (removePos[r][c] != 0) {
                 h = h ^ zobristHash[r][c][removePiece];
             }
