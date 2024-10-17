@@ -8,6 +8,9 @@ const E = 0;
 const B = 1;
 const W = 2;
 
+let whiteCaptures = 0;
+let blackCaptures = 0;
+
 let currentPlayer = B; // 1 or 2 B or W
 
 const zobristHash = [];
@@ -68,20 +71,54 @@ const click = (event) => {
     const y = square.dataset.y;
 
     if (isPlaceable(x,y)) {
+        let h = 0; //current hash
         const Stone = new Stone(currentPlayer, x, y)
         placeStone(stone);
         square.className = `square ${currentPlayer == 1? 'black' : 'white'}`;
         currentPlayer = (currentPlayer == B)? W : B;
 
         let numCaptures = 0;
-        captures = check_captures(3-currentPlayer);
-        for (int r = 0; r < captures.length; r++) {
-            for (int c = 0; c < captures[0].length; c++) {
+        let captures = check_captures(currentPlayer);
+        for (int r = 0; r < ROW_SQUARES; r++) {
+            for (int c = 0; c < COL_SQUARES; c++) {
                 if (captures[r][c] == 1) {
-                    numCaptures += 1;
+                    board[r][c] = E;
+                    captures += 1;
                 }
             }
         }
+        if (numCaptures == 0) {
+            h = addHashOne(3-currentPlayer, [x,y], lastHash);
+        } else {
+            h = addHashOne(3-currentPlayer,[x,y], lastHash);
+            h = removeHash(currentPlayer, captures, h);
+        }
+
+        possibleCaptures = check_captures(3-currentPlayer);
+        if(checkHash(h) || possibleCaptures.some(sublist => sublist.includes(1)) ) {
+            //KO
+            for (int r = 0; r < ROW_SQUARES; r++) {
+                for (int c = 0; c < COL_SQUARES; c++) {
+                    if (captures[r][c] == 1) {
+                        board[r][c] == currentPlayer;
+                    }
+                }
+            }
+            board[x][y] = E;
+            h = lastHash;
+            currentPlayer = 3-currentPlayer;
+            hashes.push(h);
+        } else {
+            hashes.push(h);
+            lastHash = h;
+
+            if (currentPlayer == B) {
+                whiteCaptures += captures;
+            } else {
+                blackCaptures += captures;
+            }
+        }
+
     }
 
 };
@@ -126,20 +163,33 @@ function checkCaptures(color) {
 }
 
 function initializeZobristTable() {
-    const board = Array.from({ length: 2 }, () =>
-        Array.from({ length: ROW_SQUARES }, () =>
-            Array.from({ length: COL_SQUARES }, () =>
-                Math.floor(Math.random() * (2 ** 64 - 1)) + 1
-            )
-        )
-    );
+    const board = Array.from({ length: ROW_SQUARES }, () =>
+                    Array.from({ length: COL_SQUARES }, () =>
+                        Array.from({ length: 2 }, () =>
+                            Math.floor(Math.random() * (Math.pow(2, 64) - 1)) + 1
+                        )
+                    )
+                );
     return board;
 }
 
-function add_hash_one(ap, add_pos, hash_){
-    let add_piece = ap - 1; // to fit into (1, 2^64 -1) threshold
+function addHashOne(ap, addPos, hash_){
+    let addPiece = ap - 1; // to fit into (1, 2^64 -1) threshold
 
-    let h = hash_ ^ zobrist[add_pos[0]][add_pos[1]][add_piece]
+    let h = hash_ ^ zobristHash[addPos[0]][addPos[1]][addPiece]
+    return h;
+}
+
+function removeHash(rp, removePos, hash_) {
+    let removePiece = rp - 1;
+    let h = hash_;
+    for (int r = 0; r < ROW_SQUARES; r++) {
+        for (int c = 0; c < COL_SQUARES; c++) {
+            if (removePos[r][c] != 0) {
+                h = h ^ zobristHash[r][c][removePiece];
+            }
+        }
+    }
     return h;
 }
 
