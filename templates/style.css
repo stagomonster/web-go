@@ -3,6 +3,7 @@
     height: 400px;
     border: 1px solid black;
     display: grid;
+    background-color: #f0f0f0;
     grid-template-columns: repeat(19, 1fr);
     grid-template-rows: repeat(19, 1fr);
 }
@@ -13,4 +14,13 @@
     border-radius: 50%;
     background-color: black;
     cursor: pointer;
+}
+.black {
+  background-image: url('black_stone.png');
+  background-size: cover;
+}
+
+.white {
+  background-image: url('white_stone.png');
+  background-size: cover;
 }

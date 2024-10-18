@@ -113,6 +113,7 @@ const click = (event) => {
         }
 
         possibleCaptures = checkCaptures(3-currentPlayer);
+
         if(checkHash(h) || possibleCaptures.some(sublist => sublist.includes(1)) ) {
             //KO
             for (let r = 0; r < ROW_SQUARES; r++) {
@@ -141,7 +142,7 @@ const click = (event) => {
 
 };
 
-function floodFill(x,y, color) { // return true if alive, false if captured
+function floodFill(x, y, color) { // return true if alive, false if captured
     if(visited[x][y] == 1) {
         return false;
     } else {
@@ -171,7 +172,7 @@ function checkCaptures(color) {
         for (let c = 0; c < COL_SQUARES; c++) {
             if (board[r][c] == color) {
                 visited = new Array(ROW_SQUARES).fill(0).map(() => new Array(COL_SQUARES).fill(0));
-                if (!floodFill(color)) { //Group is not alive
+                if (!floodFill(r, c, color)) { //Group is not alive
                     removed[r][c] = 1;
                 }
             }
@@ -216,7 +217,7 @@ function removeHash(rp, removePos, hash_) {
 }
 
 
-
+console.log("test");
 initializeBoard();
 zobristHash = initializeZobristTable();
 renderBoard();
