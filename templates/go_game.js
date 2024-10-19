@@ -92,7 +92,8 @@ const click = (event) => {
         let h = 0; //current hash
         let stone = new Stone(currentPlayer, x, y)
         placeStone(stone);
-        square.className = `square ${currentPlayer == 1? 'black' : 'white'}`;
+        // square.className = `square ${currentPlayer == 1? 'black' : 'white'}`;
+        square.classList.add(currentPlayer == 1? 'black' : 'white');
         currentPlayer = (currentPlayer == B)? W : B;
 
         let numCaptures = 0;

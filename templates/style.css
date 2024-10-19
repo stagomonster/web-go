@@ -3,7 +3,11 @@
     height: 400px;
     border: 1px solid black;
     display: grid;
-    background-color: #f0f0f0;
+    grid-gap: 1px;
+    border-width: 0px;
+    border-style: solid;
+    border-color: black;
+    background-color: #d4a539!important;
     grid-template-columns: repeat(19, 1fr);
     grid-template-rows: repeat(19, 1fr);
 }
@@ -14,6 +18,10 @@
     border-radius: 50%;
     background-color: black;
     cursor: pointer;
+}
+.square {
+    border-style: solid;
+    border-width: 1px;
 }
 .black {
   background-image: url('black_stone.png');
