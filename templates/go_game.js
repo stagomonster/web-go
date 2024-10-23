@@ -36,7 +36,11 @@ function initializeBoard() {
 function placeStone(s) {
     board[s.x][s.y] = s.color;
     let square = document.getElementById(`square-${s.x}-${s.y}`);
-    square.className = `square ${s.color === B? 'black' : 'white'}`;
+    if (s.color===3) {
+        square.className = `square`;
+    } else {
+        square.className = `square ${s.color === B? 'black' : 'white'}`;
+    }
 }
 
 function isPlaceable(x,y) {
@@ -97,11 +101,13 @@ const click = (event) => {
         currentPlayer = (currentPlayer == B)? W : B;
 
         let numCaptures = 0;
-        let captures = checkCaptures(currentPlayer);
+        let captures = checkCaptures(currentPlayer); // checks for any captures of opponent piece (piece not played)
         for (let r = 0; r < ROW_SQUARES; r++) {
             for (let c = 0; c < COL_SQUARES; c++) {
                 if (captures[r][c] == 1){
                     board[r][c] = E;
+                    let stoneEmpty = new Stone(3, r, c);
+                    placeStone(stoneEmpty);
                     numCaptures += 1;
                 }
             }
@@ -113,10 +119,15 @@ const click = (event) => {
             h = removeHash(currentPlayer, captures, h);
         }
 
-        possibleCaptures = checkCaptures(3-currentPlayer);
+        possibleCaptures = checkCaptures(3-currentPlayer); // checks for any captures of current piece (piece just played)
 
         if(checkHash(h) || possibleCaptures.some(sublist => sublist.includes(1)) ) {
             //KO
+            if (checkHash(h)) {
+                console.log("Ko rule violated");
+            } else if (possibleCaptures.some(sublist => sublist.includes(1))) {
+                console.log("Self-sacrifice violated");
+            }
             for (let r = 0; r < ROW_SQUARES; r++) {
                 for (let c = 0; c < COL_SQUARES; c++) {
                     if (captures[r][c] == 1) {
@@ -144,6 +155,7 @@ const click = (event) => {
 };
 
 function floodFill(x, y, color) { // return true if alive, false if captured
+    let colorS = (color == 1)? "black" : "white";
     if(visited[x][y] == 1) {
         return false;
     } else {
@@ -151,7 +163,7 @@ function floodFill(x, y, color) { // return true if alive, false if captured
     }
 
     if (x > ROW_SQUARES || y > COL_SQUARES || x < 0 || y < 0) {
-        return;
+        return false;
     }
     if (board[x][y] == E) {
         return true;
@@ -218,7 +230,6 @@ function removeHash(rp, removePos, hash_) {
 }
 
 
-console.log("test");
 initializeBoard();
 zobristHash = initializeZobristTable();
 renderBoard();
