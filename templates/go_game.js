@@ -34,11 +34,13 @@ function initializeBoard() {
 }
 
 function placeStone(s) {
-    board[s.x][s.y] = s.color;
+
     let square = document.getElementById(`square-${s.x}-${s.y}`);
     if (s.color===3) {
         square.className = `square`;
+        board[s.x][s.y] = E;
     } else {
+        board[s.x][s.y] = s.color;
         square.className = `square ${s.color === B? 'black' : 'white'}`;
     }
 }
@@ -112,6 +114,7 @@ const click = (event) => {
                 }
             }
         }
+        console.log(board);
         if (numCaptures == 0) {
             h = addHashOne(3-currentPlayer, [x,y], lastHash);
         } else {
